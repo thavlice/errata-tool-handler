@@ -2,15 +2,18 @@ version: '3.8'
 
 # Intended to be run from the podman directory
 
-services:
+networks:
+  sbomer:
+    driver: bridge
 
+services:
   kafka:
       image: quay.io/strimzi/kafka:latest-kafka-3.7.0
       ports:
         - "9092:9092"
       volumes:
-        - ./kafka-config/server.properties:/opt/kafka/config/server.properties
-        - ./kafka-data:/var/lib/kafka
+        - ./kafka-config/server.properties:/opt/kafka/config/server.properties:z
+        - ./kafka-data:/var/lib/kafka:z
       environment:
         LOG_DIR: /var/lib/kafka
       command: >
@@ -26,6 +29,8 @@ services:
         interval: 15s
         timeout: 10s
         retries: 10
+      networks:
+        - sbomer
 
   schema-registry:
     image: quay.io/apicurio/apicurio-registry:latest
@@ -45,6 +50,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - sbomer
 
   errata-tool-handler:
     build:
@@ -58,4 +65,7 @@ services:
       schema-registry:
         condition: service_healthy
     environment:
-      QUARKUS_MESSAGING_OUTGOING_GENERATIONS_REQUESTS_BOOTSTRAP_SERVERS: kafka:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8080/apis/registry/v2
+    networks:
+      - sbomer
