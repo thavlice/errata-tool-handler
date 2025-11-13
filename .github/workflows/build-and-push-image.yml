@@ -12,6 +12,8 @@ jobs:
     env:
       REGISTRY: quay.io
       IMAGE_NAME: sbomer/errata-tool-handler
+      SCHEMA_REPO_DIR: sbomer-contracts
+      SCHEMA_REPO_URL: https://github.com/sbomer-project/sbomer-contracts.git
 
     permissions:
       contents: read
@@ -35,6 +37,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
+
+      # TEMPORARY clone the avro schema repo
+      - name: Clone Schema Repository
+        run: git clone ${{ env.SCHEMA_REPO_URL }} ${{ env.SCHEMA_REPO_DIR }}
+
+      # TEMPORARY way of including avro schema objects
+      - name: Build and Install Schemas
+        run: mvn clean install
+        working-directory: ${{ env.SCHEMA_REPO_DIR }}
 
       - name: Build with Maven
         run: mvn clean package -Dquarkus.profile=prod
