@@ -9,7 +9,7 @@ SCHEMA_REPO_URL="https://github.com/sbomer-project/${SCHEMA_REPO_DIR}.git"
 # build command for the schemas
 SCHEMA_BUILD_CMD="mvn clean install"
 # build command for the component
-COMPONENT_BUILD_CMD="mvn clean package"
+COMPONENT_BUILD_CMD="mvn clean package -Dquarkus.profile=dev"
 
 set -e
 

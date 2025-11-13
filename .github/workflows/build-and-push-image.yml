@@ -1,0 +1,76 @@
+name: Build and Push Errata Tool Handler Image to Quay.io
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build and Push Image
+    runs-on: ubuntu-22.04
+
+    env:
+      REGISTRY: quay.io
+      IMAGE_NAME: sbomer/errata-tool-handler
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+      digest: ${{ steps.push-to-quay.outputs.digest }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: sha
+        run: echo "sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean package -Dquarkus.profile=prod
+
+      - name: Build Image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: latest ${{ steps.sha.outputs.sha }}
+          containerfiles: |
+            ./src/main/docker/Dockerfile.jvm
+
+      - name: Push To quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write # for creating OIDC tokens for signing.
+      packages: write # for uploading attestations.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
+    with:
+      image: ${{ needs.build.outputs.image }}
+      digest: ${{ needs.build.outputs.digest }}
+    secrets:
+      registry-username: ${{ secrets.QUAY_USER }}
+      registry-password: ${{ secrets.QUAY_PASSWORD }}
