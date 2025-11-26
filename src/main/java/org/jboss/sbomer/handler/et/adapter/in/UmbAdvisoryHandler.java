@@ -69,7 +69,7 @@ public class UmbAdvisoryHandler {
 
         // 3. Check for relevant status (QE or SHIPPED_LIVE)
         Long errataId = json.getLong("errata_id");
-        if (errataId == null){
+        if (errataId == null) {
             log.error("Errata id not found");
             return message.ack();
         }
