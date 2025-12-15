@@ -91,15 +91,21 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# Quarkus liveness and readiness probes
 livenessProbe:
   httpGet:
-    path: /
+    path: /q/health/live
     port: http
+  # Give it time to start up before checking
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
 readinessProbe:
   httpGet:
-    path: /
+    path: /q/health/ready
     port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
