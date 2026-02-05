@@ -10,7 +10,7 @@ TAR_FILE="errata-tool-handler.tar"
 
 echo "--- Building and inserting errata-tool-handler image into Minikube registry ---"
 
-bash ./hack/build-with-schemas.sh
+bash ./hack/build-with-schemas.sh prod
 
 podman build --format docker -t "$SBOM_SERVICE_IMAGE" -f src/main/docker/Dockerfile.jvm .
 

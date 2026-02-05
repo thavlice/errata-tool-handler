@@ -18,12 +18,10 @@ LOCAL_CHART_PATH="helm/errata-tool-handler-chart"
 echo "--- Checking Minikube status (Profile: $PROFILE) ---"
 
 if ! minikube -p "$PROFILE" status > /dev/null 2>&1; then
-    error "Minikube cluster '$PROFILE' is NOT running."
+    echo "Error: Minikube cluster '$PROFILE' is NOT running."
     echo ""
     echo "Please run the setup script first to start the cluster and install dependencies:"
     echo "./hack/setup-minikube.sh (and please leave it running so that the cluster can be exposed to the host at port 8001)"
-    echo "If window was already closed, please run: kubectl proxy --port=8001 --address='0.0.0.0' --accept-hosts='^.*$'"
-    echo "This enables the system to connect to the minikube cluster"
     echo ""
     exit 1
 fi
